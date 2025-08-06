@@ -30,7 +30,7 @@ echo "[X] Step 3: Project artifact version updated."
 echo "--- Step 4: Updating mule-artifact.json ---"
 sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7"/g' mule-artifact.json
 if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
-  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\n  "javaSpecificationVersions": ["17"]/' mule-artifact.json
+  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\n  "  javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
 echo "[X] Step 4: mule-artifact.json updated."
 
@@ -41,12 +41,12 @@ sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0
 sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
 echo "[X] Step 5: main-pipeline.yml updated."
 
-# Step 7: Update compiler target version in pom.xml
-echo "--- Step 7: Updating compiler target version in pom.xml ---"
+# Step 6: Update compiler target version in pom.xml
+echo "--- Step 6: Updating compiler target version in pom.xml ---"
 if grep -q "<compilerArgs>" pom.xml; then
     sed -i 's|<target>.*</target>|<target>17</target>|' pom.xml
 fi
-echo "[X] Step 7: Compiler target version updated."
+echo "[X] Step 6: Compiler target version updated."
 
 
 echo -e "\nUpgrade script finished."
