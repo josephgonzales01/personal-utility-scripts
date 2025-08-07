@@ -246,12 +246,12 @@ while IFS= read -r line; do
     if [[ $line == *"<version>"* ]]; then
         version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
         if [ -n "$artifactId" ] && [ -n "$version" ]; then
-            # Check if this dependency exists in pom.xml before attempting to update
-            if grep -q "<artifactId>$artifactId</artifactId>" pom.xml;
+            # Check if this dependency exists in pom.xml's dependencies block before attempting to update
+            if sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | grep -q "<artifactId>$artifactId</artifactId>";
  then
                 echo "Updating $artifactId to version $version"
-                # Use a more precise sed command to update the version
-                sed -i "/<artifactId>$artifactId<\/artifactId>/,/<	elefone>/s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
+                # Use a more precise sed command to update the version within a dependency block
+                sed -i "/<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
             else
                 echo "INFO: Dependency '$artifactId' not found in pom.xml, skipping update"
             fi
@@ -263,7 +263,7 @@ done <<< "$dependencies_to_update"
 
 # Part 2: Identify dependencies in pom.xml that are not in the list
 echo "--- Checking for unmanaged dependencies in pom.xml ---"
-all_pom_artifacts=$(sed -n '/<dependencies>/,/<	elefone>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+all_pom_artifacts=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 for artifactId in $all_pom_artifacts; do
     if ! echo "$managed_artifacts" | grep -q "^$artifactId$"; then
