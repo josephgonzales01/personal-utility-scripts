@@ -28,23 +28,10 @@ echo "[X] Step 3: Project artifact version updated."
 
 # Step 4: Update dependencies versions
 echo "--- Step 4: Updating dependencies versions ---"
+echo "--> This step will only update dependencies explicitly listed. All other dependencies will be flagged for manual review."
 
-# Read dependencies from the here-document
-while IFS= read -r line; do
-    if [[ $line == *"<artifactId>"* ]]; then
-        artifactId=$(echo "$line" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
-    fi
-    if [[ $line == *"<version>"* ]]; then
-        version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p')
-        if [ -n "$artifactId" ] && [ -n "$version" ]; then
-            echo "Updating $artifactId to version $version"
-            # Use a more specific sed command to avoid issues with nested dependencies
-            sed -i "/<artifactId>$artifactId<\/artifactId>/{N;s|<version>.*<\/version>|<version>$version<\/version>|}" pom.xml
-            artifactId=""
-            version=""
-        fi
-    fi
-done <<'EOF'
+# Define the list of dependencies to update.
+read -r -d '' dependencies_to_update <<'EOF'
 <dependencies>
     <dependency>
         <groupId>com.solacesystems</groupId>
@@ -201,7 +188,44 @@ done <<'EOF'
     </dependency>
 </dependencies>
 EOF
-echo "[X] Step 4: Dependencies versions updated."
+
+# Part 1: Update dependencies that are found in the list
+echo "--- Updating managed dependencies in pom.xml ---"
+managed_artifacts=$(echo "$dependencies_to_update" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+
+# Process each dependency in the list
+while IFS= read -r line; do
+    if [[ $line == *"<artifactId>"* ]]; then
+        artifactId=$(echo "$line" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p' | xargs)
+    fi
+    if [[ $line == *"<version>"* ]]; then
+        version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
+        if [ -n "$artifactId" ] && [ -n "$version" ]; then
+            # Check if this dependency exists in pom.xml before attempting to update
+            if grep -q "<artifactId>$artifactId</artifactId>" pom.xml; then
+                echo "Updating $artifactId to version $version"
+                # Use a more precise sed command to update the version
+                sed -i "/<artifactId>$artifactId<\/artifactId>/,/<\/dependency>/s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
+            else
+                echo "INFO: Dependency '$artifactId' not found in pom.xml, skipping update"
+            fi
+            artifactId=""
+            version=""
+        fi
+    fi
+done <<< "$dependencies_to_update"
+
+# Part 2: Identify dependencies in pom.xml that are not in the list
+echo "--- Checking for unmanaged dependencies in pom.xml ---"
+all_pom_artifacts=$(sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+
+for artifactId in $all_pom_artifacts; do
+    if ! echo "$managed_artifacts" | grep -q "^$artifactId$"; then
+        echo "INFO: Dependency '$artifactId' in pom.xml is not in the automatic update list and may require manual update."
+    fi
+done
+
+echo "[X] Step 4: Dependencies versions updated and checked."
 
 
 # Step 5: Update mule-artifact.json
