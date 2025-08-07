@@ -35,15 +35,25 @@ else
   git checkout -b feature/MuleRuntimeUpgrade4.9
 fi
 
-# Update assetVersion in jwt-validation-policy files
+# Step 1: Update assetVersion in policy files
+echo "--- Step 1: Updating asset versions in policy files ---"
 for file in configuration/jwt-validation-policy-*.json; do
   sed -i 's/"assetVersion": "1.3.6"/"assetVersion": "1.5.0"/' "$file"
 done
-
-# Update assetVersion in rate-limiting-policy.json
 sed -i 's/"assetVersion": "1.3.4"/"assetVersion": "1.4.0"/' "configuration/rate-limiting-policy.json"
+echo "[X] Step 1: Policy files updated."
 
-# Ask the user if they want to open the project in VS Code.
+# Step 2: Delete Jenkinsfile if it exists
+echo "--- Step 2: Deleting Jenkinsfile ---"
+if [ -f "Jenkinsfile" ]; then
+    rm Jenkinsfile
+    echo "[X] Step 2: Jenkinsfile deleted."
+else
+    echo "INFO: Jenkinsfile not found, skipping deletion."
+fi
+
+# Step 3: Ask the user if they want to open the project in VS Code.
+echo "--- Step 3: Open VSCode ---"
 read -p "Do you want to open the project in Visual Studio Code? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
