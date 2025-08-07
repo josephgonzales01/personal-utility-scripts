@@ -293,6 +293,10 @@ else
     echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
 fi
 
-
-
-echo -e "\nUpgrade script finished."
+# Step 8: Ask the user if they want to open the project in VS Code.
+echo "--- Step 8: Open VSCode ---"
+read -p "Do you want to open the project in VSCode? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  code .
+fi
