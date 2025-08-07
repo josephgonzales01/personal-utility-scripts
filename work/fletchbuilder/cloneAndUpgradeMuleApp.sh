@@ -1,34 +1,79 @@
 #!/bin/bash
 
-# This script updates the project files according to UpgradeMuleApp.md
+
+###################################################################################
+# These scripts clones a project from Azure DevOps, checks out the develop branch,
+# and creates a new feature branch for a Mule Runtime upgrade.
+#####################################################################################
+
+# Check if a project name is provided as an argument.
+if [ -z "$1" ]; then
+  echo "Usage: $0 <project-name>"
+  exit 1
+fi
+
+# Set the project name from the first argument.
+PROJECT_NAME=$1
+
+# Clone the repository from Azure DevOps.
+git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations/_git/$PROJECT_NAME"
+
+# Change into the project directory.
+cd "$PROJECT_NAME"
+
+# Checkout the develop branch.
+git checkout develop
+
+# Pull the latest changes from the develop branch.
+git pull
+
+# Check if the feature branch already exists.
+if git rev-parse --verify feature/MuleRuntimeUpgrade4.9 >/dev/null 2>&1; then
+  # If the branch exists, check it out.
+  echo "Branch feature/MuleRuntimeUpgrade4.9 already exists."
+  git checkout feature/MuleRuntimeUpgrade4.9
+else
+  # If the branch does not exist, create it.
+  echo "Branch feature/MuleRuntimeUpgrade4.9 does not exist. Creating it now."
+  git checkout -b feature/MuleRuntimeUpgrade4.9
+fi
+
+############################################################################################################################
+# These next lines updates the project runtime to Mule 4.9, java 17, and dependency versions to the latest stable versions.
+############################################################################################################################
 
 # Backup original files
-echo "Backing up pom.xml, mule-artifact.json, and main-pipeline.yml..."
+echo "Backing up pom.xml ..."
 cp pom.xml pom.xml.bak
-cp mule-artifact.json mule-artifact.json.bak
-cp main-pipeline.yml main-pipeline.yml.bak
 
-# Step 1: Update pom.xml properties
-echo "--- Step 1: Updating pom.xml properties ---"
+# Step 1: Update parent pom version
+echo "--- Step 1: Updating parent pom version ---"
+sed -i '/<parent>/,/^<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
+echo "[X] Step 1: Parent pom version updated."
+
+# Step 2: Update project artifact version
+echo "--- Step 2: Updating project artifact version ---"
+sed -i '12s|<version>.*</version>|<version>1.1.0-SNAPSHOT</version>|' pom.xml
+echo "[X] Step 2: Project artifact version updated."
+
+# Step 3: Update pom.xml properties
+echo "--- Step 3: Updating pom.xml properties ---"
 sed -i 's|<munit.version>.*</munit.version>|<munit.version>3.4.0</munit.version>|' pom.xml
 sed -i 's|<app.runtime>.*</app.runtime>|<app.runtime>4.9-java17</app.runtime>|' pom.xml
 sed -i 's|<munit.app.runtime>.*</munit.app.runtime>|<munit.app.runtime>4.9.7</munit.app.runtime>|' pom.xml
 sed -i 's|<mule.maven.plugin.version>.*</mule.maven.plugin.version>|<mule.maven.plugin.version>4.3.1</mule.maven.plugin.version>|' pom.xml
-echo "[X] Step 1: pom.xml properties updated."
+echo "[X] Step 3: pom.xml properties updated."
 
-# Step 2: Update parent pom version
-echo "--- Step 2: Updating parent pom version ---"
-sed -i '/<parent>/,/^<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
-echo "[X] Step 2: Parent pom version updated."
+# Step 4: Update compiler target version in pom.xml
+echo "--- Step 4: Updating compiler target version in pom.xml ---"
+if grep -q "<compilerArgs>" pom.xml; then
+    sed -i 's|<target>.*</target>|<target>17</target>|' pom.xml
+fi
+echo "[X] Step 4: Compiler target version updated."
 
-# Step 3: Update project artifact version
-echo "--- Step 3: Updating project artifact version ---"
-sed -i '12s|<version>.*</version>|<version>1.1.0-SNAPSHOT</version>|' pom.xml
-echo "[X] Step 3: Project artifact version updated."
-
-# Step 4: Update dependencies versions
-echo "--- Step 4: Updating dependencies versions ---"
-echo "--> This step will only update dependencies explicitly listed. All other dependencies will be flagged for manual review."
+# Step 5: Update dependencies versions
+echo "--- Step 5: Updating dependencies versions ---"
+echo ">> This step will only update dependencies explicitly listed. All other dependencies will be flagged for manual review."
 
 # Define the list of dependencies to update.
 read -r -d '' dependencies_to_update <<'EOF'
@@ -65,7 +110,7 @@ read -r -d '' dependencies_to_update <<'EOF'
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-apikit-module</artifactId>
-        <version>1.11.6</version>
+        <version>1.11.7</version>
         <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
@@ -202,10 +247,11 @@ while IFS= read -r line; do
         version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
         if [ -n "$artifactId" ] && [ -n "$version" ]; then
             # Check if this dependency exists in pom.xml before attempting to update
-            if grep -q "<artifactId>$artifactId</artifactId>" pom.xml; then
+            if grep -q "<artifactId>$artifactId</artifactId>" pom.xml;
+ then
                 echo "Updating $artifactId to version $version"
                 # Use a more precise sed command to update the version
-                sed -i "/<artifactId>$artifactId<\/artifactId>/,/<\/dependency>/s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
+                sed -i "/<artifactId>$artifactId<\/artifactId>/,/<	elefone>/s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
             else
                 echo "INFO: Dependency '$artifactId' not found in pom.xml, skipping update"
             fi
@@ -217,7 +263,7 @@ done <<< "$dependencies_to_update"
 
 # Part 2: Identify dependencies in pom.xml that are not in the list
 echo "--- Checking for unmanaged dependencies in pom.xml ---"
-all_pom_artifacts=$(sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+all_pom_artifacts=$(sed -n '/<dependencies>/,/<	elefone>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 for artifactId in $all_pom_artifacts; do
     if ! echo "$managed_artifacts" | grep -q "^$artifactId$"; then
@@ -225,30 +271,28 @@ for artifactId in $all_pom_artifacts; do
     fi
 done
 
-echo "[X] Step 4: Dependencies versions updated and checked."
+echo "[X] Step 5: Dependencies versions updated and checked."
 
 
-# Step 5: Update mule-artifact.json
-echo "--- Step 5: Updating mule-artifact.json ---"
+# Step 6: Update mule-artifact.json
+echo "--- Step 6: Updating mule-artifact.json ---"
 sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7"/g' mule-artifact.json
 if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
   sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\n	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
-echo "[X] Step 5: mule-artifact.json updated."
+echo "[X] Step 6: mule-artifact.json updated."
 
-# Step 6: Update main-pipeline.yml
-echo "--- Step 6: Updating main-pipeline.yml ---"
-sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
-sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
-sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
-echo "[X] Step 6: main-pipeline.yml updated."
-
-# Step 7: Update compiler target version in pom.xml
-echo "--- Step 7: Updating compiler target version in pom.xml ---"
-if grep -q "<compilerArgs>" pom.xml; then
-    sed -i 's|<target>.*</target>|<target>17</target>|' pom.xml
+# Step 7: Update main-pipeline.yml
+echo "--- Step 7: Updating main-pipeline.yml ---"
+if [ -f "main-pipeline.yml" ]; then
+    sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
+    sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
+    sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
+    echo "[X] Step 7: main-pipeline.yml updated."
+else
+    echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
 fi
-echo "[X] Step 7: Compiler target version updated."
+
 
 
 echo -e "\nUpgrade script finished."
