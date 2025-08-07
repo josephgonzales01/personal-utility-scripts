@@ -53,7 +53,7 @@ echo "[X] Step 1: Parent pom version updated."
 
 # Step 2: Update project artifact version
 echo "--- Step 2: Updating project artifact version ---"
-sed -i '12s|<version>.*</version>|<version>1.1.0-SNAPSHOT</version>|' pom.xml
+sed -i '/<\/parent>/,/<properties>/s|<version>.*</version>|<version>1.1.0-SNAPSHOT</version>|' pom.xml
 echo "[X] Step 2: Project artifact version updated."
 
 # Step 3: Update pom.xml properties
