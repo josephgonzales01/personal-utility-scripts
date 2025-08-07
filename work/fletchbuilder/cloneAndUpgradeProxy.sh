@@ -13,17 +13,18 @@ fi
 PROJECT_NAME=$1
 
 # Clone the repository from Azure DevOps.
+echo "--- Step 1: Cloning the project $PROJECT_NAME ---"
 git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations/_git/$PROJECT_NAME"
 
 # Change into the project directory.
 cd "$PROJECT_NAME"
 
-# Checkout the develop branch.
+# Checkout the develop branch and Pull the latest changes.
+echo "--- Step 2: Checkout develop and pull the latest changes ---"
 git checkout develop
-
-# Pull the latest changes from the develop branch.
 git pull
 
+echo "--- Step 3: Create a new branch feature/MuleRuntimeUpgrade4.9 if it doesn't exist ---"
 # Check if the feature branch already exists.
 if git rev-parse --verify feature/MuleRuntimeUpgrade4.9 >/dev/null 2>&1; then
   # If the branch exists, check it out.
@@ -35,26 +36,24 @@ else
   git checkout -b feature/MuleRuntimeUpgrade4.9
 fi
 
-# Step 1: Update assetVersion in policy files
-echo "--- Step 1: Updating asset versions in policy files ---"
+# Update assetVersion in policy files
+echo "--- Step 4: Updating assetVersion in jwt-validation-policy-*.json files ---"
 for file in configuration/jwt-validation-policy-*.json; do
   sed -i 's/"assetVersion": "1.3.6"/"assetVersion": "1.5.0"/' "$file"
 done
+echo "--- Step 5: Updating assetVersion in rate-limiting-policy.json ---"
 sed -i 's/"assetVersion": "1.3.4"/"assetVersion": "1.4.0"/' "configuration/rate-limiting-policy.json"
-echo "[X] Step 1: Policy files updated."
 
-# Step 2: Delete Jenkinsfile if it exists
-echo "--- Step 2: Deleting Jenkinsfile ---"
+# Delete Jenkinsfile if it exists
+echo "--- Step 6: Deleting Jenkinsfile ---"
 if [ -f "Jenkinsfile" ]; then
     rm Jenkinsfile
-    echo "[X] Step 2: Jenkinsfile deleted."
 else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Step 3: Ask the user if they want to open the project in VS Code.
-echo "--- Step 3: Open VSCode ---"
-read -p "Do you want to open the project in Visual Studio Code? (y/n) " -n 1 -r
+# Ask the user if they want to open the project in VS Code.
+read -p "Do you want to open the project in VS Code? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
   code .
