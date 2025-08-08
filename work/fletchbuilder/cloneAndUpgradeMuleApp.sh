@@ -81,8 +81,13 @@ read -r -d '' dependencies_to_update <<'EOF'
     <dependency>
         <groupId>com.solacesystems</groupId>
         <artifactId>sol-jms</artifactId>
-        <version>${solace.jms.version}</version>
+        <version>10.27.3</version>
     </dependency>
+    <dependency>
+			<groupId>com.solacesystems</groupId>
+			<artifactId>sol-jms-ra</artifactId>
+			<version>10.27.3</version>
+	</dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-objectstore-connector</artifactId>
@@ -247,13 +252,11 @@ while IFS= read -r line; do
         version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
         if [ -n "$artifactId" ] && [ -n "$version" ]; then
             # Check if this dependency exists in pom.xml's dependencies block before attempting to update
-            if sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | grep -q "<artifactId>$artifactId</artifactId>";
+            if sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | grep -q "<artifactId>$artifactId</artifactId>";
  then
                 echo "Updating $artifactId to version $version"
                 # Use a more precise sed command to update the version within a dependency block
-                sed -i "/<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*<\/version>|<version>$version<\/version>|" pom.xml
-            else
-                echo "INFO: Dependency '$artifactId' not found in pom.xml, skipping update"
+                sed -i "/<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*</version>|<version>$version</version>|" pom.xml           
             fi
             artifactId=""
             version=""
@@ -263,7 +266,7 @@ done <<< "$dependencies_to_update"
 
 # Part 2: Identify dependencies in pom.xml that are not in the list
 echo "--- Checking for unmanaged dependencies in pom.xml ---"
-all_pom_artifacts=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+all_pom_artifacts=$(sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 for artifactId in $all_pom_artifacts; do
     if ! echo "$managed_artifacts" | grep -q "^$artifactId$"; then
