@@ -49,31 +49,26 @@ cp pom.xml pom.xml.bak
 # Step 1: Update parent pom version
 echo "--- Step 1: Updating parent pom version ---"
 sed -i '/<parent>/,/^<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
-echo "[X] Step 1: Parent pom version updated."
 
 # Step 2: Update project artifact version
-echo "--- Step 2: Updating project artifact version ---"
+echo "--- Step 2: Updating this project artifact version ---"
 sed -i '/<\/parent>/,/<properties>/s|<version>.*</version>|<version>1.1.0-SNAPSHOT</version>|' pom.xml
-echo "[X] Step 2: Project artifact version updated."
 
 # Step 3: Update pom.xml properties
-echo "--- Step 3: Updating pom.xml properties ---"
+echo "--- Step 3: Updating runtime, munit, and maven.plugin properties ---"
 sed -i 's|<munit.version>.*</munit.version>|<munit.version>3.4.0</munit.version>|' pom.xml
 sed -i 's|<app.runtime>.*</app.runtime>|<app.runtime>4.9-java17</app.runtime>|' pom.xml
 sed -i 's|<munit.app.runtime>.*</munit.app.runtime>|<munit.app.runtime>4.9.7</munit.app.runtime>|' pom.xml
 sed -i 's|<mule.maven.plugin.version>.*</mule.maven.plugin.version>|<mule.maven.plugin.version>4.3.1</mule.maven.plugin.version>|' pom.xml
-echo "[X] Step 3: pom.xml properties updated."
 
 # Step 4: Update compiler target version in pom.xml
 echo "--- Step 4: Updating compiler target version in pom.xml ---"
 if grep -q "<compilerArgs>" pom.xml; then
     sed -i 's|<target>.*</target>|<target>17</target>|' pom.xml
 fi
-echo "[X] Step 4: Compiler target version updated."
 
 # Step 5: Update dependencies versions
 echo "--- Step 5: Updating dependencies versions ---"
-echo ">> This step will only update dependencies explicitly listed. All other dependencies will be flagged for manual review."
 
 # Define the list of dependencies to update.
 read -r -d '' dependencies_to_update <<'EOF'
@@ -239,8 +234,7 @@ read -r -d '' dependencies_to_update <<'EOF'
 </dependencies>
 EOF
 
-# Part 1: Update dependencies that are found in the list
-echo "--- Updating managed dependencies in pom.xml ---"
+# Part 1: Update dependencies that are found in the list above
 managed_artifacts=$(echo "$dependencies_to_update" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 # Process each dependency in the list
@@ -265,7 +259,7 @@ while IFS= read -r line; do
 done <<< "$dependencies_to_update"
 
 # Part 2: Identify dependencies in pom.xml that are not in the list
-echo "--- Checking for unmanaged dependencies in pom.xml ---"
+echo " Checking for unmanaged dependencies in pom.xml "
 all_pom_artifacts=$(sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 for artifactId in $all_pom_artifacts; do
@@ -274,8 +268,6 @@ for artifactId in $all_pom_artifacts; do
     fi
 done
 
-echo "[X] Step 5: Dependencies versions updated and checked."
-
 
 # Step 6: Update mule-artifact.json
 echo "--- Step 6: Updating mule-artifact.json ---"
@@ -283,7 +275,6 @@ sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7"/g' mule-artifact.json
 if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
   sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\n	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
-echo "[X] Step 6: mule-artifact.json updated."
 
 # Step 7: Update main-pipeline.yml
 echo "--- Step 7: Updating main-pipeline.yml ---"
@@ -296,8 +287,16 @@ else
     echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
 fi
 
+# Delete Jenkinsfile if it exists
+echo "--- Step 8: Deleting Jenkinsfile ---"
+if [ -f "Jenkinsfile" ]; then
+    rm Jenkinsfile
+else
+    echo "INFO: Jenkinsfile not found, skipping deletion."
+fi
+
 # Step 8: Ask the user if they want to open the project in VS Code.
-echo "--- Step 8: Open VSCode ---"
+echo "--- Step 9: Open VSCode ---"
 read -p "Do you want to open the project in VSCode? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
