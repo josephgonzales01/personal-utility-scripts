@@ -230,7 +230,8 @@ for artifactId in $all_pom_artifacts; do
         if [ -n "$new_version" ]; then
             echo "Updating $artifactId to version $new_version"
             # Use a precise sed command to update the version within the dependencies block
-            sed -i "/<dependencies>/,/\/dependencies>/{ /<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*<\/version>|<version>$new_version<\/version>|; }/" pom.xml
+            # Using '#' as a delimiter to avoid escaping slashes in tags.
+            sed -i "\#<dependencies>#,\#</dependencies># { \#<artifactId>$artifactId</artifactId>#,\#</dependency># s|<version>.*</version>|<version>$new_version</version>|; }" pom.xml
         fi
     else
         # It's not in the list, so warn the user.
