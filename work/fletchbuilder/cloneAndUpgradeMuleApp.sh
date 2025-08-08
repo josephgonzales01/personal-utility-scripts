@@ -87,73 +87,61 @@ read -r -d '' dependencies_to_update <<'EOF'
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-objectstore-connector</artifactId>
         <version>1.2.3</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-json-module</artifactId>
         <version>2.5.3</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-oauth-module</artifactId>
         <version>1.1.24</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-http-connector</artifactId>
         <version>1.10.4</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-apikit-module</artifactId>
         <version>1.11.7</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.module</groupId>
         <artifactId>mule-java-module</artifactId>
         <version>2.0.1</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-cloudhub-connector</artifactId>
         <version>1.2.0</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-sockets-connector</artifactId>
         <version>1.2.6</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-validation-module</artifactId>
         <version>2.0.7</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-jms-connector</artifactId>
         <version>1.10.2</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.modules</groupId>
         <artifactId>mule-secure-configuration-property-module</artifactId>
         <version>1.2.7</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-db-connector</artifactId>
         <version>1.14.16</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <!--  https://mvnrepository.com/artifact/net.sf.jt400/jt400  -->
     <dependency>
@@ -165,13 +153,11 @@ read -r -d '' dependencies_to_update <<'EOF'
         <groupId>org.mule.weave</groupId>
         <artifactId>assertions</artifactId>
         <version>2.10.0-20250729</version>
-        <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-spring-module</artifactId>
         <version>2.0.0</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>com.mchange</groupId>
@@ -187,83 +173,67 @@ read -r -d '' dependencies_to_update <<'EOF'
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-salesforce-connector</artifactId>
         <version>11.2.0</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-file-connector</artifactId>
         <version>1.5.3</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>com.solace.connector</groupId>
         <artifactId>solace-mulesoft-connector</artifactId>
         <version>1.7.0</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-ftps-connector</artifactId>
         <version>2.0.2</version>
-        <classifier>mule-plugin</classifier>
     </dependency>
     <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
         <version>1.78.1</version>
-        <scope>runtime</scope>
     </dependency>
     <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bctls-jdk18on</artifactId>
         <version>1.78.1</version>
-        <scope>runtime</scope>
     </dependency>
     <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcpkix-jdk18on</artifactId>
         <version>1.78.1</version>
-        <scope>runtime</scope>
     </dependency>
     <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcutil-jdk18on</artifactId>
         <version>1.78.1</version>
-        <scope>runtime</scope>
     </dependency>
 </dependencies>
 EOF
 
-# Part 1: Update dependencies that are found in the list above
-managed_artifacts=$(echo "$dependencies_to_update" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+# Part 1 & 2 combined: Process all dependencies from pom.xml
+echo "--- Step 5a: Processing dependencies from pom.xml ---"
+# Extract the dependencies block to avoid parsing the whole file repeatedly
+pom_dependencies=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml)
 
-# Process each dependency in the list
-while IFS= read -r line; do
-    if [[ $line == *"<artifactId>"* ]]; then
-        artifactId=$(echo "$line" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p' | xargs)
-    fi
-    if [[ $line == *"<version>"* ]]; then
-        version=$(echo "$line" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
-        if [ -n "$artifactId" ] && [ -n "$version" ]; then
-            # Check if this dependency exists in pom.xml's dependencies block before attempting to update
-            if sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | grep -q "<artifactId>$artifactId</artifactId>";
- then
-                echo "Updating $artifactId to version $version"
-                # Use a more precise sed command to update the version within a dependency block
-                sed -i "/<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*</version>|<version>$version</version>|" pom.xml           
-            fi
-            artifactId=""
-            version=""
-        fi
-    fi
-done <<< "$dependencies_to_update"
-
-# Part 2: Identify dependencies in pom.xml that are not in the list
-echo " Checking for unmanaged dependencies in pom.xml "
-all_pom_artifacts=$(sed -n '/<dependencies>/,/<\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
+# Get all artifactIds from the pom's dependencies block
+all_pom_artifacts=$(echo "$pom_dependencies" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
 for artifactId in $all_pom_artifacts; do
-    if ! echo "$managed_artifacts" | grep -q "^$artifactId$"; then
+    # Check if the artifact is in our update list
+    if echo "$dependencies_to_update" | grep -q "<artifactId>$artifactId</artifactId>"; then
+        # It's in the list, so let's update it.
+        # Extract the new version from our list.
+        new_version=$(echo "$dependencies_to_update" | sed -n "/<artifactId>$artifactId<\/artifactId>/,/\/dependency>/p" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
+
+        if [ -n "$new_version" ]; then
+            echo "Updating $artifactId to version $new_version"
+            # Use a precise sed command to update the version within the dependencies block
+            sed -i "/<dependencies>/,/\/dependencies>/{ /<artifactId>$artifactId<\/artifactId>/, /<\/dependency>/ s|<version>.*<\/version>|<version>$new_version<\/version>|; }/" pom.xml
+        fi
+    else
+        # It's not in the list, so warn the user.
         echo "INFO: Dependency '$artifactId' in pom.xml is not in the automatic update list and may require manual update."
     fi
 done
@@ -273,7 +243,8 @@ done
 echo "--- Step 6: Updating mule-artifact.json ---"
 sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7"/g' mule-artifact.json
 if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
-  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\n	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
+  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\
+	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
 
 # Step 7: Update main-pipeline.yml
