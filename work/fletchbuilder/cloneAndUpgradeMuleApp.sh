@@ -48,7 +48,7 @@ cp pom.xml pom.xml.bak
 
 # Step 1: Update parent pom version
 echo "--- Step 1: Updating parent pom version ---"
-sed -i '/<parent>/,/^<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
+sed -i '/<parent>/,/<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
 
 # Step 2: Update project artifact version
 echo "--- Step 2: Updating this project artifact version ---"
@@ -227,30 +227,23 @@ read -r -d '' dependencies_to_update <<'EOF'
 </dependencies>
 EOF
 
-# Part 1 & 2 combined: Process all dependencies from pom.xml
 echo "--- Step 5a: Processing dependencies from pom.xml ---"
-# Extract the dependencies block to avoid parsing the whole file repeatedly
-pom_dependencies=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml)
+# Extract all artifactIds from the dependencies section
+pom_artifacts=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
-# Get all artifactIds from the pom's dependencies block
-all_pom_artifacts=$(echo "$pom_dependencies" | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
-
-for artifactId in $all_pom_artifacts; do
-    # Check if the artifact is in our update list
+for artifactId in $pom_artifacts; do
+    # Check if this artifact is in our update list
     if echo "$dependencies_to_update" | grep -q "<artifactId>$artifactId</artifactId>"; then
-        # It's in the list, so let's update it.
-        # Extract the new version from our list.
+        # Extract the new version from the update list
         new_version=$(echo "$dependencies_to_update" | sed -n "/<artifactId>$artifactId<\/artifactId>/,/\/dependency>/p" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
-
+        
         if [ -n "$new_version" ]; then
             echo "Updating $artifactId to version $new_version"
-            # Use a precise sed command to update the version within the dependencies block
-            # Using '#' as a delimiter to avoid escaping slashes in tags.
-            sed -i "\#<dependencies>#,\#</dependencies># { \#<artifactId>$artifactId</artifactId>#,\#</dependency># s|<version>.*</version>|<version>$new_version</version>|; }" pom.xml
+            # Update version only within the dependencies section to avoid plugin conflicts
+            sed -i "/<dependencies>/,/<\/dependencies>/ { \#<artifactId>$artifactId</artifactId>#,/<\/dependency>/ s|<version>.*</version>|<version>$new_version</version>|; }" pom.xml
         fi
     else
-        # It's not in the list, so warn the user.
-        echo "INFO: Dependency '$artifactId' in pom.xml is not in the automatic update list and may require manual update."
+        echo "INFO: Dependency '$artifactId' not in update list, may require manual update."
     fi
 done
 
