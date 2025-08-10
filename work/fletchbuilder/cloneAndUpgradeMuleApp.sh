@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-###################################################################################
-# These scripts clones a project from Azure DevOps, checks out the develop branch,
-# and creates a new feature branch for a Mule Runtime upgrade.
-#####################################################################################
+#####################################################################################################
+# This script clones a project from Azure DevOps, lists all available branches,
+# lets the user select one by number, and creates a new feature branch for a Mule Runtime upgrade.
+#####################################################################################################
 
 # Check if a project name is provided as an argument.
 if [ -z "$1" ]; then
@@ -21,10 +21,38 @@ git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations
 # Change into the project directory.
 cd "$PROJECT_NAME"
 
-# Checkout the develop branch.
-git checkout develop
+# Fetch all branches
+git fetch --all
 
-# Pull the latest changes from the develop branch.
+# Get list of remote branches (excluding HEAD)
+branches=$(git branch -r | grep -v HEAD | sed 's/origin\///')
+
+# Convert to array
+IFS=$'\n' read -r -d '' -a branch_array <<< "$branches"
+
+# Display branches with numbers
+echo "Existing branches:"
+for i in "${!branch_array[@]}"; do
+  echo "$((i+1)). ${branch_array[i]}"
+done
+
+# Prompt user to select a branch
+while true; do
+  read -p "Select the base branch for the new RuntimeUpgrade branch will be based on (1-${#branch_array[@]}): " branch_num
+  if [[ $branch_num -ge 1 && $branch_num -le ${#branch_array[@]} ]]; then
+    break
+  else
+    echo "Invalid selection. Please enter a number between 1 and ${#branch_array[@]}."
+  fi
+done
+
+# Get selected branch name
+SELECTED_BRANCH=$(echo "${branch_array[$((branch_num-1))]}" | xargs)
+
+# Checkout the selected branch.
+git checkout "$SELECTED_BRANCH"
+
+# Pull the latest changes from the selected branch.
 git pull
 
 # Check if the feature branch already exists.
