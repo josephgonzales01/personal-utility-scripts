@@ -190,6 +190,11 @@ read -r -d '' dependencies_to_update <<'EOF'
         <version>2.0.2</version>
     </dependency>
     <dependency>
+			<groupId>org.mule.modules</groupId>
+			<artifactId>mule-xml-module</artifactId>
+			<version>1.4.2</version>
+	</dependency>
+    <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk18on</artifactId>
         <version>1.78.1</version>
