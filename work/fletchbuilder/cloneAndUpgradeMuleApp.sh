@@ -74,6 +74,16 @@ echo "--- Step 5: Updating dependencies versions ---"
 read -r -d '' dependencies_to_update <<'EOF'
 <dependencies>
     <dependency>
+        <groupId>org.mule.tools.maven</groupId>
+        <artifactId>mule-maven-plugin</artifactId>
+        <version>${mule.maven.plugin.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+    </dependency>
+    <dependency>
         <groupId>com.solacesystems</groupId>
         <artifactId>sol-jms</artifactId>
         <version>10.27.3</version>
