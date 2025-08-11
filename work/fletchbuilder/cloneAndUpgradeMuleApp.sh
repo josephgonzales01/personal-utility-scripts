@@ -295,6 +295,26 @@ else
     echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
 fi
 
+# Check for fixExtraBracket.sh script before Step 8
+echo "--- Checking for fixExtraBracket.sh script ---"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+FIX_BRACKET_SCRIPT="$SCRIPT_DIR/fixExtraBracket.sh"
+
+if [ -f "$FIX_BRACKET_SCRIPT" ]; then
+    echo "Found fixExtraBracket.sh script in the same directory."
+    read -p "Do you want to run the fixExtraBracket.sh script to fix extra closing brackets in logger messages? (y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "Running fixExtraBracket.sh script..."
+        bash "$FIX_BRACKET_SCRIPT"
+        echo "fixExtraBracket.sh script completed."
+    else
+        echo "Skipping fixExtraBracket.sh script execution."
+    fi
+else
+    echo "INFO: fixExtraBracket.sh script not found in the same directory, skipping."
+fi
+
 # Delete Jenkinsfile if it exists
 echo "--- Step 8: Deleting Jenkinsfile ---"
 if [ -f "Jenkinsfile" ]; then
@@ -303,7 +323,7 @@ else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Step 8: Ask the user if they want to open the project in VS Code.
+# Step 9: Ask the user if they want to open the project in VS Code.
 echo "--- Step 9: Open VSCode ---"
 read -p "Do you want to open the project in VSCode? (y/n) " -n 1 -r
 echo
