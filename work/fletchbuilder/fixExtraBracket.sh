@@ -3,7 +3,18 @@
 # fixExtraBracket.sh
 # Script to fix extra closing brackets in logger message attributes in *-common.xml files
 
+# Check if a project name is provided as an argument.
+if [ -z "$1" ]; then
+  echo "Usage: $0 <project-name>"
+  echo "Note: This script should be run from the parent directory of the project"
+  exit 1
+fi
+
+# Set the project name from the first argument.
+PROJECT_NAME=$1
+
 echo "=== Fix Extra Bracket Script ==="
+echo "Project: $PROJECT_NAME"
 echo "Scanning for *-common.xml files and fixing extra closing brackets in logger message attributes..."
 echo
 
@@ -40,6 +51,15 @@ fix_extra_brackets() {
     fi
 }
 
+# Change into the project directory
+if [ ! -d "$PROJECT_NAME" ]; then
+    echo "Error: Project directory '$PROJECT_NAME' not found"
+    exit 1
+fi
+
+echo "Changing to project directory: $PROJECT_NAME"
+cd "$PROJECT_NAME"
+
 # Find all *-common.xml files
 files_found=0
 files_processed=0
@@ -60,7 +80,7 @@ for file in $(find . -name "*-common.xml" -type f); do
     fi
     
     # Create a backup
-    cp "$file" "${file}.backup"
+    cp "$file" "${file}.bak"
     
     file_modified=false
     fixes_in_file=0
@@ -95,15 +115,15 @@ for file in $(find . -name "*-common.xml" -type f); do
                 fi
             fi
         fi
-    done < "${file}.backup"
+    done < "${file}.bak"
     
     # Report results
     if [[ "$file_modified" == true ]]; then
         echo "  ✓ File updated with $fixes_in_file fix(es)"
-        echo "  ✓ Backup saved as ${file}.backup"
+        echo "  ✓ Backup saved as ${file}.bak"
         files_processed=$((files_processed + 1))
     else
-        rm "${file}.backup"
+        rm "${file}.bak"
         echo "  ✓ No fixes needed"
     fi
     
@@ -119,7 +139,7 @@ echo "Total fixes applied: $total_fixes"
 if [[ $total_fixes -gt 0 ]]; then
     echo
     echo "✓ Script completed successfully with $total_fixes fix(es) applied!"
-    echo "✓ Backup files created with .backup extension"
+    echo "✓ Backup files created with .bak extension"
 else
     echo
     echo "✓ Script completed - no fixes were needed!"
