@@ -260,7 +260,6 @@ read -r -d '' dependencies_to_update <<'EOF'
 </dependencies>
 EOF
 
-echo "--- Step 5a: Processing dependencies from pom.xml ---"
 # Extract all artifactIds from the dependencies section
 pom_artifacts=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | sed -n 's/.*<artifactId>\(.*\)<\/artifactId>.*/\1/p')
 
