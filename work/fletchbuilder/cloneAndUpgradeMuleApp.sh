@@ -303,28 +303,8 @@ else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Check for fixExtraBracket.sh script and execute it if found
-echo "--- Step 9: Attempt to fix common extra bracket issue ---"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-FIX_BRACKET_SCRIPT="$SCRIPT_DIR/../fixExtraBracket.sh"
-
-if [ -f "$FIX_BRACKET_SCRIPT" ]; then
-    echo "Found fixExtraBracket.sh script in the parent directory."
-    read -p "Do you want to run the fixExtraBracket.sh script to fix extra closing brackets in logger messages? (y/n) " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Running fixExtraBracket.sh script with project name: $PROJECT_NAME..."
-        bash "$FIX_BRACKET_SCRIPT" "$PROJECT_NAME"
-        echo "fixExtraBracket.sh script completed."
-    else
-        echo "Skipping fixExtraBracket.sh script execution."
-    fi
-else
-    echo "INFO: fixExtraBracket.sh script not found in the parent directory, skipping."
-fi
-
 # Step 9: Ask the user if they want to open the project in VS Code.
-echo "--- Step 10: Open VSCode ---"
+echo "--- Step 9: Open VSCode ---"
 read -p "Do you want to open the project in VSCode? (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
