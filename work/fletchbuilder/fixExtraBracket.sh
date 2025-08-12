@@ -18,38 +18,6 @@ echo "Project: $PROJECT_NAME"
 echo "Scanning for *-common.xml files and fixing extra closing brackets in logger message attributes..."
 echo
 
-# Function to count brackets in a string
-count_brackets() {
-    local text="$1"
-    local open_count=$(echo "$text" | grep -o '\[' | wc -l)
-    local close_count=$(echo "$text" | grep -o '\]' | wc -l)
-    echo "$open_count $close_count"
-}
-
-# Function to fix extra closing brackets
-fix_extra_brackets() {
-    local message="$1"
-    local open_count close_count
-    read open_count close_count <<< $(count_brackets "$message")
-    
-    # If there are more closing brackets than opening brackets
-    if [ $close_count -gt $open_count ]; then
-        local extra_brackets=$((close_count - open_count))
-        
-        # Remove extra closing brackets from the end
-        local fixed_message="$message"
-        for ((i=1; i<=extra_brackets; i++)); do
-            # Remove the last occurrence of ]
-            fixed_message=$(echo "$fixed_message" | sed 's/\(.*\)\]/\1/')
-        done
-        
-        echo "$fixed_message"
-        return 0
-    else
-        echo "$message"
-        return 1
-    fi
-}
 
 # Change into the project directory
 if [ ! -d "$PROJECT_NAME" ]; then
@@ -85,43 +53,126 @@ for file in $(find . -name "*-common.xml" -type f); do
     file_modified=false
     fixes_in_file=0
     
-    # Process each logger line that has extra brackets
-    while IFS= read -r line; do
-        # Check if line contains a logger element with message attribute
-        if echo "$line" | grep -q '<logger.*message=".*"'; then
-            # Extract the message attribute value
-            message_attr=$(echo "$line" | sed -n 's/.*message="\([^"]*\)".*/\1/p')
+    # Read the entire file content and process it with awk to handle multi-line logger elements
+    awk '
+    BEGIN {
+        in_logger = 0
+        logger_content = ""
+        line_start = 0
+        fixes = 0
+    }
+    
+    # Function to count brackets
+    function count_brackets(text) {
+        open_count = gsub(/\[/, "[", text)
+        close_count = gsub(/\]/, "]", text)
+        return open_count " " close_count
+    }
+    
+    # Function to fix extra brackets
+    function fix_extra_brackets(message) {
+        bracket_counts = count_brackets(message)
+        split(bracket_counts, counts, " ")
+        open_count = counts[1]
+        close_count = counts[2]
+        
+        if (close_count > open_count) {
+            extra_brackets = close_count - open_count
+            fixed_message = message
             
-            if [[ -n "$message_attr" ]]; then
-                # Try to fix extra brackets
-                fixed_message=$(fix_extra_brackets "$message_attr")
-                fix_result=$?
+            # Remove extra closing brackets from the end
+            for (i = 1; i <= extra_brackets; i++) {
+                sub(/\]$/, "", fixed_message)
+            }
+            
+            return fixed_message
+        }
+        return message
+    }
+    
+    /<logger/ {
+        in_logger = 1
+        logger_content = $0
+        line_start = NR
+        
+        # Check if logger element is complete on this line
+        if (/>/) {
+            in_logger = 0
+            # Process single-line logger
+            if (match(logger_content, /message="([^"]*)"/, arr)) {
+                original_message = arr[1]
+                fixed_message = fix_extra_brackets(original_message)
                 
-                if [[ $fix_result -eq 0 ]]; then
-                    echo "  Found logger with extra brackets:"
-                    echo "    Original: $message_attr"
-                    echo "    Fixed:    $fixed_message"
+                if (original_message != fixed_message) {
+                    print "  Found logger with extra brackets on line " line_start ":" > "/dev/stderr"
+                    print "    Original: " original_message > "/dev/stderr"
+                    print "    Fixed:    " fixed_message > "/dev/stderr"
                     
-                    # Escape special characters for sed
-                    escaped_original=$(echo "$message_attr" | sed 's/[[\.*^$()+?{|]/\\&/g')
-                    escaped_fixed=$(echo "$fixed_message" | sed 's/[[\.*^$()+?{|]/\\&/g')
-                    
-                    # Replace only the message content in the file
-                    sed -i "s/message=\"${escaped_original}\"/message=\"${escaped_fixed}\"/g" "$file"
-                    
-                    file_modified=true
-                    fixes_in_file=$((fixes_in_file + 1))
-                    total_fixes=$((total_fixes + 1))
-                fi
-            fi
-        fi
-    done < "${file}.bak"
+                    # Replace the message in the logger content
+                    gsub(/message="[^"]*"/, "message=\"" fixed_message "\"", logger_content)
+                    fixes++
+                }
+            }
+            print logger_content
+        }
+        next
+    }
+    
+    in_logger && />/ {
+        # End of multi-line logger element
+        logger_content = logger_content "\n" $0
+        in_logger = 0
+        
+        # Process multi-line logger
+        if (match(logger_content, /message="([^"]*)"/, arr)) {
+            original_message = arr[1]
+            fixed_message = fix_extra_brackets(original_message)
+            
+            if (original_message != fixed_message) {
+                print "  Found logger with extra brackets starting at line " line_start ":" > "/dev/stderr"
+                print "    Original: " original_message > "/dev/stderr"
+                print "    Fixed:    " fixed_message > "/dev/stderr"
+                
+                # Replace the message in the logger content
+                gsub(/message="[^"]*"/, "message=\"" fixed_message "\"", logger_content)
+                fixes++
+            }
+        }
+        print logger_content
+        next
+    }
+    
+    in_logger {
+        # Continue building multi-line logger element
+        logger_content = logger_content "\n" $0
+        next
+    }
+    
+    !in_logger {
+        # Regular line, just print it
+        print $0
+    }
+    
+    END {
+        print fixes > "/tmp/awk_fixes_count"
+    }
+    ' "${file}.bak" > "$file"
+    
+    # Get the number of fixes from awk
+    if [[ -f "/tmp/awk_fixes_count" ]]; then
+        fixes_in_file=$(cat /tmp/awk_fixes_count)
+        rm -f /tmp/awk_fixes_count
+    else
+        fixes_in_file=0
+    fi
     
     # Report results
-    if [[ "$file_modified" == true ]]; then
+    if [[ $fixes_in_file -gt 0 ]]; then
         echo "  ✓ File updated with $fixes_in_file fix(es)"
         echo "  ✓ Backup saved as ${file}.bak"
         files_processed=$((files_processed + 1))
+        total_fixes=$((total_fixes + fixes_in_file))
+        file_modified=true
     else
         rm "${file}.bak"
         echo "  ✓ No fixes needed"
