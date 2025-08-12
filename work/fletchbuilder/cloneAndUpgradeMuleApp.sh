@@ -215,8 +215,13 @@ read -r -d '' dependencies_to_update <<'EOF'
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-salesforce-connector</artifactId>
-        <version>11.2.0</version>
+        <version>11.2.1</version>
     </dependency>
+    <dependency>
+        <groupId>com.mulesoft.connectors</groupId>
+        <artifactId>mule-salesforce-composite-connector</artifactId>
+        <version>2.19.0</version>        
+	</dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-file-connector</artifactId>
@@ -225,7 +230,7 @@ read -r -d '' dependencies_to_update <<'EOF'
     <dependency>
         <groupId>com.solace.connector</groupId>
         <artifactId>solace-mulesoft-connector</artifactId>
-        <version>1.7.0</version>
+        <version>1.8.0</version>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
