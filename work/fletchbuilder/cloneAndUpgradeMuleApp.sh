@@ -276,7 +276,7 @@ for artifactId in $pom_artifacts; do
             sed -i "/<dependencies>/,/<\/dependencies>/ { \#<artifactId>$artifactId</artifactId>#,/<\/dependency>/ s|<version>.*</version>|<version>$new_version</version>|; }" pom.xml
         fi
     else
-        echo "INFO: Dependency '$artifactId' not in update list, may require manual update."
+        echo "       [x] '$artifactId' not in update list, may require manual update."
     fi
 done
 
@@ -295,7 +295,6 @@ if [ -f "main-pipeline.yml" ]; then
     sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
     sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
     sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
-    echo "[X] Step 7: main-pipeline.yml updated."
 else
     echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
 fi
