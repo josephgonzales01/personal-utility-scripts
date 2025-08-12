@@ -213,6 +213,16 @@ read -r -d '' dependencies_to_update <<'EOF'
         <version>7.0.0-M1</version>
     </dependency>
     <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-ldap</artifactId>
+        <version>7.0.0-M1</version>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.security</groupId>
+        <artifactId>spring-security-web</artifactId>
+        <version>7.0.0-M1</version>
+    </dependency>
+    <dependency>
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-salesforce-connector</artifactId>
         <version>11.2.1</version>
