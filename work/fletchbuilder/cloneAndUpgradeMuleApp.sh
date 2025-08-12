@@ -181,6 +181,11 @@ read -r -d '' dependencies_to_update <<'EOF'
         <artifactId>mule-db-connector</artifactId>
         <version>1.14.16</version>
     </dependency>
+    <dependency>
+        <groupId>org.mule.connectors</groupId>
+        <artifactId>mule-sftp-connector</artifactId>
+        <version>2.5.0</version>       
+	</dependency>
     <!--  https://mvnrepository.com/artifact/net.sf.jt400/jt400  -->
     <dependency>
         <groupId>net.sf.jt400</groupId>
