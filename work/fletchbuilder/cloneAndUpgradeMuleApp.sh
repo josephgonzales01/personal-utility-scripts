@@ -98,8 +98,8 @@ fi
 # Step 5: Update dependencies versions
 echo "--- Step 5: Updating dependencies versions ---"
 
-# Define the list of dependencies to update.
-read -r -d '' dependencies_to_update <<'EOF'
+# Define the list of updated dependencies.
+read -r -d '' updated_dependencies <<'EOF'
 <dependencies>
     <dependency>
         <groupId>org.mule.tools.maven</groupId>
@@ -280,9 +280,9 @@ pom_artifacts=$(sed -n '/<dependencies>/,/\/dependencies>/p' pom.xml | sed -n 's
 
 for artifactId in $pom_artifacts; do
     # Check if this artifact is in our update list
-    if echo "$dependencies_to_update" | grep -q "<artifactId>$artifactId</artifactId>"; then
+    if echo "$updated_dependencies" | grep -q "<artifactId>$artifactId</artifactId>"; then
         # Extract the new version from the update list
-        new_version=$(echo "$dependencies_to_update" | sed -n "/<artifactId>$artifactId<\/artifactId>/,/\/dependency>/p" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
+        new_version=$(echo "$updated_dependencies" | sed -n "/<artifactId>$artifactId<\/artifactId>/,/\/dependency>/p" | sed -n 's/.*<version>\(.*\)<\/version>.*/\1/p' | xargs)
         
         if [ -n "$new_version" ]; then
             echo "Updating $artifactId to version $new_version"
