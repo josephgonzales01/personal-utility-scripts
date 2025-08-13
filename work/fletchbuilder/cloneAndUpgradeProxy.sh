@@ -12,6 +12,10 @@ fi
 # Set the project name from the first argument.
 PROJECT_NAME=$1
 
+# Get the directory where this script is located (before changing directories)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TEMPLATES_DIR="$SCRIPT_DIR/Mule-Integrations-Templates"
+
 # Clone the repository from Azure DevOps.
 echo "--- Step 1: Cloning the project $PROJECT_NAME ---"
 git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations/_git/$PROJECT_NAME"
@@ -80,9 +84,118 @@ else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Ask the user if they want to open the project in VS Code.
-read -p "Do you want to open the project in VS Code? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  code .
+# Step 7: Update main-pipeline.yml
+echo "--- Step 7: Updating main-pipeline.yml ---"
+if [ -f "main-pipeline.yml" ]; then
+    sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
+    sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
+    sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
+else
+    echo "INFO: main-pipeline.yml not found. Downloading from Azure DevOps repository..."
+    
+    # Available business groups
+    business_groups=("BP" "DS" "FBAU" "FI" "GT")
+    
+    # Display business groups with numbers
+    echo "Available Business Groups:"
+    for i in "${!business_groups[@]}"; do
+        echo "$((i+1)). ${business_groups[i]}"
+    done
+    
+    # Prompt user to select a business group
+    while true; do
+        read -p "Select the Business Group for this proxy (1-${#business_groups[@]}): " bg_num
+        if [[ $bg_num -ge 1 && $bg_num -le ${#business_groups[@]} ]]; then
+            break
+        else
+            echo "Invalid selection. Please enter a number between 1 and ${#business_groups[@]}."
+        fi
+    done
+    
+    # Get selected business group
+    SELECTED_BG="${business_groups[$((bg_num-1))]}"
+    echo "Selected Business Group: $SELECTED_BG"
+    
+    echo "Getting main-pipeline.yml for business group: $SELECTED_BG"
+    
+    # Check if templates directory already exists
+    if [ -d "$TEMPLATES_DIR" ]; then
+        echo "Templates directory found. Updating to latest version..."
+        cd "$TEMPLATES_DIR"
+        
+        # Fetch latest changes and checkout the correct branch
+        git fetch --all 2>/dev/null
+        git checkout feature/jdk17-maven3.8.6 2>/dev/null || git checkout main 2>/dev/null || echo "Using current branch"
+        git pull 2>/dev/null || echo "Pull completed"
+        
+        cd "$OLDPWD"
+    else
+        echo "Templates directory not found. Cloning templates from FB-Integration/Mule-Integrations repository..."
+        
+        # Clone the Mule-Integrations repository to get the templates
+        if git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations/_git/Mule-Integrations" "$TEMPLATES_DIR" 2>/dev/null; then
+            cd "$TEMPLATES_DIR"
+            
+            # Checkout the correct branch
+            git checkout feature/jdk17-maven3.8.6 2>/dev/null || git checkout main 2>/dev/null || echo "Using default branch"
+            
+            cd "$OLDPWD"
+            echo "Successfully cloned templates repository"
+        else
+            echo "ERROR: Failed to clone templates repository. Please manually add the file from:"
+            echo "https://dev.azure.com/FB-Integration/Mule-Integrations/_git/Mule-Integrations?path=/templates/Mule%20Proxy/${SELECTED_BG}&version=GBfeature/jdk17-maven3.8.6&_a=contents"
+            return 1
+        fi
+    fi
+    
+    # Check if the specific business group pipeline file exists
+    PIPELINE_FILE="$TEMPLATES_DIR/templates/Mule Proxy/${SELECTED_BG}/main-pipeline.yml"
+    if [ -f "$PIPELINE_FILE" ]; then
+        # Copy the file to the project directory
+        cp "$PIPELINE_FILE" "main-pipeline.yml"
+        echo "Successfully copied main-pipeline.yml for business group: $SELECTED_BG"
+    else
+        echo "ERROR: Pipeline file not found at: $PIPELINE_FILE"
+        echo "Available business group directories:"
+        ls -la "$TEMPLATES_DIR/templates/Mule Proxy/" 2>/dev/null || echo "Templates directory not found"
+        echo ""
+        echo "Please manually add the file from:"
+        echo "https://dev.azure.com/FB-Integration/Mule-Integrations/_git/Mule-Integrations?path=/templates/Mule%20Proxy/${SELECTED_BG}&version=GBfeature/jdk17-maven3.8.6&_a=contents"
+    fi
 fi
+
+# Ask the user how they want to review the changes
+echo "--- Final Step: Review Changes ---"
+echo "How would you like to review the changes?"
+echo "1. Open in VS Code"
+echo "2. Open Git Bash GUI"
+echo "3. Show git status"
+echo "4. Skip review"
+
+while true; do
+    read -p "Select an option (1-4): " choice
+    case $choice in
+        1)
+            echo "Opening project in VS Code..."
+            code .
+            break
+            ;;
+        2)
+            echo "Opening Git Bash GUI..."
+            git gui &
+            break
+            ;;
+        3)
+            echo "Showing git status..."
+            git status
+            break
+            ;;
+        4)
+            echo "Skipping review. You can review changes later with 'git status' or 'git diff'."
+            break
+            ;;
+        *)
+            echo "Invalid selection. Please enter a number between 1 and 4."
+            ;;
+    esac
+done
