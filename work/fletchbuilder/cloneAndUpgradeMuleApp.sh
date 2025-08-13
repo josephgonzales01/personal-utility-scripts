@@ -321,10 +321,38 @@ else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Step 9: Ask the user if they want to open the project in VS Code.
-echo "--- Step 9: Open VSCode ---"
-read -p "Do you want to open the project in VSCode? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  code .
-fi
+# Step 9: Ask the user how they want to review the changes
+echo "--- Step 9: Review Changes ---"
+echo "How would you like to review the changes?"
+echo "1. Open in VS Code"
+echo "2. Open Git Bash GUI"
+echo "3. Show git status"
+echo "4. Skip review"
+
+while true; do
+    read -p "Select an option (1-4): " choice
+    case $choice in
+        1)
+            echo "Opening project in VS Code..."
+            code .
+            break
+            ;;
+        2)
+            echo "Opening Git Bash GUI..."
+            git gui &
+            break
+            ;;
+        3)
+            echo "Showing git status..."
+            git status
+            break
+            ;;
+        4)
+            echo "Skipping review. You can review changes later with 'git status' or 'git diff'."
+            break
+            ;;
+        *)
+            echo "Invalid selection. Please enter a number between 1 and 4."
+            ;;
+    esac
+done
