@@ -27,15 +27,18 @@ cd "$PROJECT_NAME"
 git fetch --all
 
 # Get list of remote branches (excluding HEAD)
-branches=$(git branch -r | grep -v HEAD | sed 's/origin\///')
+branches=$(git branch -r | grep -v HEAD | sed 's/ *origin\///')
 
 # Convert to array
 IFS=$'\n' read -r -d '' -a branch_array <<< "$branches"
 
-# Display branches with numbers
+# Display branches with numbers and last commit datetime
 echo "Existing branches:"
 for i in "${!branch_array[@]}"; do
-  echo "$((i+1)). ${branch_array[i]}"
+  branch_name="${branch_array[i]}"
+  # Get the last commit datetime for this branch
+  last_commit_datetime=$(git log -1 --format="%ad" --date=short "origin/${branch_name}" 2>/dev/null || echo "Unknown")
+  echo "$((i+1)). ${branch_name} (Last commit: ${last_commit_datetime})"
 done
 
 # Prompt user to select a branch
