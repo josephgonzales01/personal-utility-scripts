@@ -73,10 +73,6 @@ fi
 # These next lines updates the project runtime to Mule 4.9, java 17, and dependency versions to the latest stable versions.
 ############################################################################################################################
 
-# Backup original files
-echo "Backing up pom.xml ..."
-cp pom.xml pom.xml.bak
-
 # Step 1: Update parent pom version
 echo "--- Step 1: Updating parent pom version ---"
 sed -i '/<parent>/,/<\/parent>/s|<version>.*</version>|<version>1.1.0</version>|' pom.xml
