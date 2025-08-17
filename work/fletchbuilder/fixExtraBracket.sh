@@ -173,11 +173,12 @@ for file in $(find . -name "*-common.xml" -type f); do
         files_processed=$((files_processed + 1))
         total_fixes=$((total_fixes + fixes_in_file))
         file_modified=true
-    else
-        rm "${file}.bak"
+    else       
         echo "  ✓ No fixes needed"
     fi
     
+    # Remove backup file
+    rm "${file}.bak"
 done
 
 # Summary
@@ -189,8 +190,7 @@ echo "Total fixes applied: $total_fixes"
 
 if [[ $total_fixes -gt 0 ]]; then
     echo
-    echo "✓ Script completed successfully with $total_fixes fix(es) applied!"
-    echo "✓ Backup files created with .bak extension"
+    echo "✓ Script completed successfully with $total_fixes fix(es) applied!"   
 else
     echo
     echo "✓ Script completed - no fixes were needed!"
