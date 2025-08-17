@@ -47,9 +47,6 @@ for file in $(find . -name "*-common.xml" -type f); do
         continue
     fi
     
-    # Create a backup
-    cp "$file" "${file}.bak"
-    
     file_modified=false
     fixes_in_file=0
     
@@ -169,12 +166,10 @@ for file in $(find . -name "*-common.xml" -type f); do
     # Report results
     if [[ $fixes_in_file -gt 0 ]]; then
         echo "  ✓ File updated with $fixes_in_file fix(es)"
-        echo "  ✓ Backup saved as ${file}.bak"
         files_processed=$((files_processed + 1))
         total_fixes=$((total_fixes + fixes_in_file))
         file_modified=true
     else
-        rm "${file}.bak"
         echo "  ✓ No fixes needed"
     fi
     
@@ -190,7 +185,6 @@ echo "Total fixes applied: $total_fixes"
 if [[ $total_fixes -gt 0 ]]; then
     echo
     echo "✓ Script completed successfully with $total_fixes fix(es) applied!"
-    echo "✓ Backup files created with .bak extension"
 else
     echo
     echo "✓ Script completed - no fixes were needed!"
