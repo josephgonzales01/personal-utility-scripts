@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Feature branch name for Mule Runtime upgrade
+FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9"
 
 #####################################################################################################
 # This script clones a project from Azure DevOps, lists all available branches,
@@ -59,14 +61,14 @@ git checkout "$SELECTED_BRANCH"
 git pull
 
 # Check if the feature branch already exists.
-if git rev-parse --verify feature/MuleRuntimeUpgrade4.9 >/dev/null 2>&1; then
+if git rev-parse --verify "$FEATURE_BRANCH" >/dev/null 2>&1; then
   # If the branch exists, check it out.
-  echo "Branch feature/MuleRuntimeUpgrade4.9 already exists."
-  git checkout feature/MuleRuntimeUpgrade4.9
+  echo "Branch $FEATURE_BRANCH already exists."
+  git checkout "$FEATURE_BRANCH"
 else
   # If the branch does not exist, create it.
-  echo "Branch feature/MuleRuntimeUpgrade4.9 does not exist. Creating it now."
-  git checkout -b feature/MuleRuntimeUpgrade4.9
+  echo "Branch $FEATURE_BRANCH does not exist. Creating it now."
+  git checkout -b "$FEATURE_BRANCH"
 fi
 
 ############################################################################################################################
