@@ -71,24 +71,16 @@ else
   git checkout -b feature/MuleRuntimeUpgrade4.9
 fi
 
-# Update assetVersion in policy files
-echo "--- Step 4: Updating assetVersion in jwt-validation-policy-*.json files ---"
-for file in configuration/jwt-validation-policy-*.json; do
-  sed -i 's/"assetVersion": "1.3.6"/"assetVersion": "1.5.0"/' "$file"
-done
-echo "--- Step 5: Updating assetVersion in rate-limiting-policy.json ---"
-sed -i 's/"assetVersion": "1.3.4"/"assetVersion": "1.4.0"/' "configuration/rate-limiting-policy.json"
-
 # Delete Jenkinsfile if it exists
-echo "--- Step 6: Deleting Jenkinsfile ---"
+echo "--- Step 4: Deleting Jenkinsfile ---"
 if [ -f "Jenkinsfile" ]; then
     rm Jenkinsfile
 else
     echo "INFO: Jenkinsfile not found, skipping deletion."
 fi
 
-# Step 7: Update main-pipeline.yml
-echo "--- Step 7: Updating main-pipeline.yml ---"
+# Step 5: Update main-pipeline.yml
+echo "--- Step 5: Updating main-pipeline.yml ---"
 if [ -f "main-pipeline.yml" ]; then
     sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
     sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
@@ -165,6 +157,39 @@ else
         echo "Please manually add the file from:"
         echo "https://dev.azure.com/FB-Integration/Mule-Integrations/_git/Mule-Integrations?path=/templates/Mule%20Proxy/${SELECTED_BG}&version=GBfeature/jdk17-maven3.8.6&_a=contents"
     fi
+fi
+
+# Update assetVersion in policy files (moved to after main-pipeline.yml handling to avoid directory change issues)
+echo "--- Step 6: Updating assetVersion in jwt-validation-policy-*.json files ---"
+for file in configuration/jwt-validation-policy-*.json; do
+  if [ -f "$file" ]; then
+    # Update JWT validation policy to version 1.5.0 regardless of current version
+    # First check if the file contains an assetVersion field
+    if grep -q '"assetVersion"' "$file"; then
+      # Use sed to update the assetVersion value to 1.5.0
+      sed -i 's/"assetVersion": "[^"]*"/"assetVersion": "1.5.0"/' "$file"
+      echo "Updated $file to version 1.5.0"
+    else
+      echo "No assetVersion field found in $file"
+    fi
+  else
+    echo "WARNING: File $file not found"
+  fi
+done
+
+echo "--- Step 7: Updating assetVersion in rate-limiting-policy.json ---"
+if [ -f "configuration/rate-limiting-policy.json" ]; then
+  # Update rate limiting policy to version 1.4.0 regardless of current version
+  # First check if the file contains an assetVersion field
+  if grep -q '"assetVersion"' "configuration/rate-limiting-policy.json"; then
+    # Use sed to update the assetVersion value to 1.4.0
+    sed -i 's/"assetVersion": "[^"]*"/"assetVersion": "1.4.0"/' "configuration/rate-limiting-policy.json"
+    echo "Updated configuration/rate-limiting-policy.json to version 1.4.0"
+  else
+    echo "No assetVersion field found in configuration/rate-limiting-policy.json"
+  fi
+else
+  echo "WARNING: configuration/rate-limiting-policy.json not found"
 fi
 
 # Ask the user how they want to review the changes
