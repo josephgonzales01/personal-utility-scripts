@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Feature branch name for Mule Runtime upgrade
-FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9"
+FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9.7"
 
 #####################################################################################################
 # This script clones a project from Azure DevOps, lists all available branches,
@@ -273,6 +273,11 @@ read -r -d '' updated_dependencies <<'EOF'
         <artifactId>bcutil-jdk18on</artifactId>
         <version>1.78.1</version>
     </dependency>
+    <dependency>
+        <groupId>com.microsoft.sqlserver</groupId>
+        <artifactId>mssql-jdbc</artifactId>
+        <version>11.2.0.jre17</version>
+	</dependency>
 </dependencies>
 EOF
 
