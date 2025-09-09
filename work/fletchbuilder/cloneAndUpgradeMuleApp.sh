@@ -130,7 +130,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-json-module</artifactId>
-        <version>2.5.3</version>
+        <version>2.5.4</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
@@ -140,7 +140,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-http-connector</artifactId>
-        <version>1.10.4</version>
+        <version>1.10.5</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
@@ -150,7 +150,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.module</groupId>
         <artifactId>mule-java-module</artifactId>
-        <version>2.0.1</version>
+        <version>2.0.2</version>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
@@ -226,7 +226,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
         <artifactId>mule-salesforce-connector</artifactId>
-        <version>11.2.1</version>
+        <version>11.2.2</version>
     </dependency>
     <dependency>
         <groupId>com.mulesoft.connectors</groupId>
