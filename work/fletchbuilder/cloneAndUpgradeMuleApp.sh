@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Feature branch name for Mule Runtime upgrade
-FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9.7"
+FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9"
 
 #####################################################################################################
 # This script clones a project from Azure DevOps, lists all available branches,
@@ -85,7 +85,7 @@ sed -i '/<\/parent>/,/<properties>/s|<version>.*</version>|<version>1.1.0-SNAPSH
 
 # Step 3: Update pom.xml properties
 echo "--- Step 3: Updating runtime, munit, and maven.plugin properties ---"
-sed -i 's|<munit.version>.*</munit.version>|<munit.version>3.4.0</munit.version>|' pom.xml
+sed -i 's|<munit.version>.*</munit.version>|<munit.version>3.5.0</munit.version>|' pom.xml
 sed -i 's|<app.runtime>.*</app.runtime>|<app.runtime>4.9-java17</app.runtime>|' pom.xml
 sed -i 's|<munit.app.runtime>.*</munit.app.runtime>|<munit.app.runtime>4.9.7</munit.app.runtime>|' pom.xml
 sed -i 's|<mule.maven.plugin.version>.*</mule.maven.plugin.version>|<mule.maven.plugin.version>4.3.1</mule.maven.plugin.version>|' pom.xml
@@ -186,8 +186,7 @@ read -r -d '' updated_dependencies <<'EOF'
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-sftp-connector</artifactId>
         <version>2.5.0</version>       
-	</dependency>
-    <!--  https://mvnrepository.com/artifact/net.sf.jt400/jt400  -->
+	</dependency>    
     <dependency>
         <groupId>net.sf.jt400</groupId>
         <artifactId>jt400</artifactId>
@@ -278,6 +277,16 @@ read -r -d '' updated_dependencies <<'EOF'
         <artifactId>mssql-jdbc</artifactId>
         <version>11.2.0.jre17</version>
 	</dependency>
+    <dependency>
+			<groupId>org.mule.connectors</groupId>
+			<artifactId>mule-wsc-connector</artifactId>
+			<version>1.11.3</version>			
+	</dependency>
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>1.12.0</version>
+    </dependency>
 </dependencies>
 EOF
 
