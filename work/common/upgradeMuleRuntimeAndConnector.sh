@@ -4,70 +4,25 @@
 FEATURE_BRANCH="feature/MuleRuntimeUpgrade4.9"
 
 #####################################################################################################
-# This script clones a project from Azure DevOps, lists all available branches,
-# lets the user select one by number, and creates a new feature branch for a Mule Runtime upgrade.
+# This script automates the initial steps of a Mule Runtime upgrade.
+# It should be run from the root of a project's directory.
+# It creates a new feature branch for the upgrade.
 #####################################################################################################
 
-# Check if a project name is provided as an argument.
-if [ -z "$1" ]; then
-  echo "Usage: $0 <project-name>"
-  exit 1
+# Check if inside a git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: Not a git repository. Please run this script from the root of a git repository."
+    exit 1
 fi
-
-# Set the project name from the first argument.
-PROJECT_NAME=$1
-
-# Clone the repository from Azure DevOps.
-git clone "https://FB-Integration@dev.azure.com/FB-Integration/Mule-Integrations/_git/$PROJECT_NAME"
-
-# Change into the project directory.
-cd "$PROJECT_NAME"
-
-# Fetch all branches
-git fetch --all
-
-# Get list of remote branches (excluding HEAD)
-branches=$(git branch -r | grep -v HEAD | sed 's/ *origin\///')
-
-# Convert to array
-IFS=$'\n' read -r -d '' -a branch_array <<< "$branches"
-
-# Display branches with numbers and last commit datetime
-echo "Existing branches:"
-for i in "${!branch_array[@]}"; do
-  branch_name="${branch_array[i]}"
-  # Get the last commit datetime for this branch
-  last_commit_datetime=$(git log -1 --format="%ad" --date=short "origin/${branch_name}" 2>/dev/null || echo "Unknown")
-  echo "$((i+1)). ${branch_name} (Last commit: ${last_commit_datetime})"
-done
-
-# Prompt user to select a branch
-while true; do
-  read -p "Select the base branch for the new RuntimeUpgrade branch will be based on (1-${#branch_array[@]}): " branch_num
-  if [[ $branch_num -ge 1 && $branch_num -le ${#branch_array[@]} ]]; then
-    break
-  else
-    echo "Invalid selection. Please enter a number between 1 and ${#branch_array[@]}."
-  fi
-done
-
-# Get selected branch name
-SELECTED_BRANCH=$(echo "${branch_array[$((branch_num-1))]}" | xargs)
-
-# Checkout the selected branch.
-git checkout "$SELECTED_BRANCH"
-
-# Pull the latest changes from the selected branch.
-git pull
 
 # Check if the feature branch already exists.
 if git rev-parse --verify "$FEATURE_BRANCH" >/dev/null 2>&1; then
   # If the branch exists, check it out.
-  echo "Branch $FEATURE_BRANCH already exists."
+  echo "Branch $FEATURE_BRANCH already exists. Checking it out."
   git checkout "$FEATURE_BRANCH"
 else
-  # If the branch does not exist, create it.
-  echo "Branch $FEATURE_BRANCH does not exist. Creating it now."
+  # If the branch does not exist, create it from the current branch.
+  echo "Branch $FEATURE_BRANCH does not exist. Creating it from current branch."
   git checkout -b "$FEATURE_BRANCH"
 fi
 
