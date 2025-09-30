@@ -25,10 +25,16 @@ else
   echo "No project name provided. Running in the current directory."
 fi
 
+# Check if pom.xml exists before proceeding.
+if [ ! -f "pom.xml" ]; then
+    echo "Error: pom.xml not found in this directory. Exiting."
+    exit 1
+fi
+
 # Step 1: Update pom.xml properties
 echo "--- Step 1: Updating runtime, munit, and maven.plugin properties ---"
 sed -i 's|<munit.version>.*</munit.version>|<munit.version>3.5.0</munit.version>|' pom.xml
-sed -i 's|<app.runtime>.*</app.runtime>|<app.runtime>4.9-java17</app.runtime>|' pom.xml
+sed -i 's|<app.runtime>.*</app.runtime>|<app.runtime>4.9.9</app.runtime>|' pom.xml
 sed -i 's|<munit.app.runtime>.*</munit.app.runtime>|<munit.app.runtime>4.9.7</munit.app.runtime>|' pom.xml
 sed -i 's|<mule.maven.plugin.version>.*</mule.maven.plugin.version>|<mule.maven.plugin.version>4.3.1</mule.maven.plugin.version>|' pom.xml
 
@@ -259,25 +265,6 @@ if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
   sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\
 	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
-
-# Step 5: Update main-pipeline.yml
-echo "--- Step 5: Updating main-pipeline.yml ---"
-if [ -f "main-pipeline.yml" ]; then
-    sed -i "s|ref:.*|ref: refs/tags/jdk17-maven3.8.6-1.1|" main-pipeline.yml
-    sed -i "s|imagename:.*|imagename: localhost:5000/maven-mule-jdk17-maven3.8.6:1.0|" main-pipeline.yml
-    sed -i "s|jdkVersion:.*|jdkVersion: '17'|" main-pipeline.yml
-else
-    echo "INFO: main-pipeline.yml not found. Please add the main-pipeline.yml file to the project."
-fi
-
-# Step 6: Deleting Jenkinsfile
-echo "--- Step 6: Deleting Jenkinsfile ---"
-if [ -f "Jenkinsfile" ]; then
-    rm Jenkinsfile
-else
-    echo "INFO: Jenkinsfile not found, skipping deletion."
-fi
-
 
 # Step 7: Review changes in VS Code
 echo ""
