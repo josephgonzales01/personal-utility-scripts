@@ -73,7 +73,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-objectstore-connector</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
@@ -108,12 +108,12 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-sockets-connector</artifactId>
-        <version>1.2.6</version>
+        <version>1.2.7</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-validation-module</artifactId>
-        <version>2.0.7</version>
+        <version>2.0.8</version>
     </dependency>
     <dependency>
         <groupId>org.mule.connectors</groupId>
@@ -183,7 +183,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-file-connector</artifactId>
-        <version>1.5.3</version>
+        <version>1.5.4</version>
     </dependency>
     <dependency>
         <groupId>com.solace.connector</groupId>
@@ -235,6 +235,31 @@ read -r -d '' updated_dependencies <<'EOF'
         <artifactId>commons-text</artifactId>
         <version>1.12.0</version>
     </dependency>
+    <dependency>
+        <groupId>org.mule.modules</groupId>
+        <artifactId>mule-scripting-module</artifactId>
+        <version>2.1.1</version>        
+	</dependency>
+    <dependency>
+        <groupId>com.mulesoft.connectors</groupId>
+        <artifactId>mule-mongodb-connector</artifactId>
+        <version>6.3.9</version>        
+    </dependency>
+    <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-legacy</artifactId>
+        <version>5.5.0</version>
+    </dependency> 
+    <dependency>
+        <groupId>com.mulesoft.connectors</groupId>
+        <artifactId>anypoint-mq-connector</artifactId>
+        <version>4.0.13</version>       
+    </dependency>
+    <dependency>
+        <groupId>org.mule.modules</groupId>
+        <artifactId>mule-tracing-module</artifactId>
+        <version>1.2.0</version>        
+	</dependency>
 </dependencies>
 EOF
 
@@ -260,9 +285,9 @@ done
 
 # Step 4: Update mule-artifact.json
 echo "--- Step 4: Updating mule-artifact.json ---"
-sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7"/g' mule-artifact.json
+sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.9"/g' mule-artifact.json
 if ! grep -q '"javaSpecificationVersions"' mule-artifact.json; then
-  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.7",\
+  sed -i 's/"minMuleVersion": ".*"/"minMuleVersion": "4.9.9",\
 	  "javaSpecificationVersions": ["17"]/' mule-artifact.json
 fi
 
