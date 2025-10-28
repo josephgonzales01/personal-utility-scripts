@@ -287,6 +287,11 @@ read -r -d '' updated_dependencies <<'EOF'
         <artifactId>commons-text</artifactId>
         <version>1.12.0</version>
     </dependency>
+	<dependency>
+        <groupId>com.oracle.database.jdbc</groupId>
+        <artifactId>ojdbc17</artifactId>
+        <version>23.9.0.25.07</version>
+	</dependency>
 </dependencies>
 EOF
 
