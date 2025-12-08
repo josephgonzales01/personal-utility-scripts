@@ -12,8 +12,10 @@ fi
 # Set the project name from the first argument.
 PROJECT_NAME=$1
 
+# Define the feature branch name as a variable for easy modification
+FEATURE_BRANCH_NAME="feature/MuleRuntimeUpgrade4.9"
+
 # Get the directory where this script is located (before changing directories)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATES_DIR="$SCRIPT_DIR/Mule-Integrations-Templates"
 
 # Clone the repository from Azure DevOps.
@@ -59,16 +61,16 @@ echo "--- Step 2: Checkout $SELECTED_BRANCH and pull the latest changes ---"
 git checkout "$SELECTED_BRANCH"
 git pull
 
-echo "--- Step 3: Create a new branch feature/MuleRuntimeUpgrade4.9 if it doesn't exist ---"
+echo "--- Step 3: Create a new branch $FEATURE_BRANCH_NAME if it doesn't exist ---"
 # Check if the feature branch already exists.
-if git rev-parse --verify feature/MuleRuntimeUpgrade4.9 >/dev/null 2>&1; then
+if git rev-parse --verify "$FEATURE_BRANCH_NAME" >/dev/null 2>&1; then
   # If the branch exists, check it out.
-  echo "Branch feature/MuleRuntimeUpgrade4.9 already exists."
-  git checkout feature/MuleRuntimeUpgrade4.9
+  echo "Branch $FEATURE_BRANCH_NAME already exists."
+  git checkout "$FEATURE_BRANCH_NAME"
 else
   # If the branch does not exist, create it.
-  echo "Branch feature/MuleRuntimeUpgrade4.9 does not exist. Creating it now."
-  git checkout -b feature/MuleRuntimeUpgrade4.9
+  echo "Branch $FEATURE_BRANCH_NAME does not exist. Creating it now."
+  git checkout -b "$FEATURE_BRANCH_NAME"
 fi
 
 # Delete Jenkinsfile if it exists
@@ -89,7 +91,7 @@ else
     echo "INFO: main-pipeline.yml not found. Downloading from Azure DevOps repository..."
     
     # Available business groups
-    business_groups=("BP" "DS" "FBAU" "FI" "GT")
+    business_groups=("BP" "DS" "FBAU" "FI" "GT" "CO")
     
     # Display business groups with numbers
     echo "Available Business Groups:"
