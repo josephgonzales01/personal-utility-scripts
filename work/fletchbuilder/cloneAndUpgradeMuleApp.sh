@@ -140,12 +140,12 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-http-connector</artifactId>
-        <version>1.10.5</version>
+        <version>1.11.0</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
         <artifactId>mule-apikit-module</artifactId>
-        <version>1.11.7</version>
+        <version>1.11.10</version>
     </dependency>
     <dependency>
         <groupId>org.mule.module</groupId>
@@ -160,7 +160,7 @@ read -r -d '' updated_dependencies <<'EOF'
     <dependency>
         <groupId>org.mule.connectors</groupId>
         <artifactId>mule-sockets-connector</artifactId>
-        <version>1.2.6</version>
+        <version>1.2.7</version>
     </dependency>
     <dependency>
         <groupId>org.mule.modules</groupId>
